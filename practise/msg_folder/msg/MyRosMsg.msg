@@ -1,6 +1,7 @@
-float32 axis_0
-float32 axis_1
-float32 break_
-bool reverse
+float32 throttle
+float32 steer
+float32 breaks
+bool is_reverse
 bool is_autopilot
-bool exit
+bool is_exit
+uint16 vehicle_id
