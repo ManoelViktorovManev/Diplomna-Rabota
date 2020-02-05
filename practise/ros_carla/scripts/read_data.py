@@ -4,15 +4,16 @@ import glob
 import os
 import sys
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+# try:
+#     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+#         sys.version_info.major,
+#         sys.version_info.minor,
+#         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+# except IndexError:
+#     pass
 
 import carla
+
 import rospy
 from msg_folder.msg import MyRosMsg
 import pygame
@@ -36,7 +37,6 @@ class Pushing_Buton:
         self.list_of_pushed.append(time.strftime("%H"))
         self.list_of_pushed.append(time.strftime("%M"))
         self.list_of_pushed.append(time.strftime("%S"))
-    # funkciyata otdolu moje da se naprawi s nyakakwo opredeleno wreme
     def is_diferent_date(self):
         if (int(time.strftime("%S"))>=(int(self.list_of_pushed[2])+2) or 
         (time.strftime("%M")!=self.list_of_pushed[1] and int(time.strftime("%H"))!=(int(self.list_of_pushed[0])+2))):
@@ -44,32 +44,19 @@ class Pushing_Buton:
         return False
 
 client = carla.Client('localhost', 2000)
-client.set_timeout(10.0) # seconds
+client.set_timeout(10.0) 
 world=client.get_world()
-
-file1=open("list_elements.txt",'r')
-
 button_autopilot=Pushing_Buton([])
-
-list=[]
-for i in file1:
-    list.append(i[:-1])
-looking=list[-1]
-coma=looking.find(",")
 actor_list=world.get_actors()
-
 autopilot=False
-
 control_car=carla.VehicleControl()
-
-vehicle=actor_list.find(int(looking[9:coma]))
-
 def callback(data):
     global autopilot
     global button_autopilot
-    if data.exit==True:
-        print("I am here")
-        sys.exit("The console stoped :)")
+    vehicle=actor_list.find(data.vehicle_id)
+    if data.is_exit==True:
+        print("The console stoped :)")
+        rospy.signal_shutdown("exit")
     if data.is_autopilot==True:
         if len(button_autopilot.get_list())!=0:
             if (button_autopilot.is_diferent_date()):
@@ -89,10 +76,10 @@ def callback(data):
                 print("AUTOPILOT OFF")
             button_autopilot.set_state_of_pushed_button(False)
     if autopilot == False:
-        control_car.reverse=data.reverse
-        control_car.brake=data.break_
-        control_car.throttle=data.axis_0
-        control_car.steer=data.axis_1
+        control_car.reverse=data.is_reverse
+        control_car.brake=data.breaks
+        control_car.throttle=data.throttle
+        control_car.steer=data.steer
         vehicle.apply_control(control_car)
 def listener():
  
