@@ -22,31 +22,35 @@ import spawning_actors
 import time
 
 class Pushing_Buton:
-    def __init__(self,list_of_pushed,state_of_pushed_button=False):
-        self.list_of_pushed=list_of_pushed
+    def __init__(self,list_of_pushed=[],state_of_pushed_button=False):
+        self.date_of_pushed_button=list_of_pushed
         self.state_of_pushed_button=state_of_pushed_button
+        self.date_of_released_button=[]
     def set_state_of_pushed_button(self,bool_set):
         self.state_of_pushed_button=bool_set
-    def set_list_of_pushed(slef,list):
-        self.list_of_pushed=list
+    def set_list_of_pushed(self,list):
+        self.date_of_pushed_button=list
+        self.date_of_released_button=list
+    def set_list_of_released(self,list):
+        self.date_of_released_button=list
     def get_button(self):
         return self.state_of_pushed_button
     def get_list(self):
-        return self.list_of_pushed
+        return self.date_of_pushed_button
+    def get_pushed_time(self):
+        return self.date_of_released_button
     def add_new_date_now(self):
-        self.list_of_pushed.append(time.strftime("%H"))
-        self.list_of_pushed.append(time.strftime("%M"))
-        self.list_of_pushed.append(time.strftime("%S"))
-    def is_diferent_date(self):
-        if (int(time.strftime("%S"))>=(int(self.list_of_pushed[2])+2) or 
-        (time.strftime("%M")!=self.list_of_pushed[1] and int(time.strftime("%H"))!=(int(self.list_of_pushed[0])+2))):
-            return True
-        return False
+        self.date_of_pushed_button.append(time.strftime("%H"))
+        self.date_of_pushed_button.append(time.strftime("%M"))
+        self.date_of_pushed_button.append(time.strftime("%S"))
+    def add_released_time(self):
+        self.date_of_released_button.append(time.strftime("%H"))
+        self.date_of_released_button.append(time.strftime("%M"))
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(10.0) 
 world=client.get_world()
-button_autopilot=Pushing_Buton([])
+button_autopilot=Pushing_Buton()
 actor_list=world.get_actors()
 autopilot=False
 control_car=carla.VehicleControl()
@@ -57,10 +61,15 @@ def callback(data):
     if data.is_exit==True:
         print("The console stoped :)")
         rospy.signal_shutdown("exit")
+
+    if data.is_autopilot==False:
+        if len(button_autopilot.get_pushed_time()) == 0 and len(button_autopilot.get_list()) != 0:
+            button_autopilot.add_released_time()
+            
     if data.is_autopilot==True:
-        if len(button_autopilot.get_list())!=0:
-            if (button_autopilot.is_diferent_date()):
-                spawning_actors.deleteAllelements(button_autopilot.get_list())
+        if len(button_autopilot.get_list())!=0 and len(button_autopilot.get_pushed_time())!=0:
+                button_autopilot.set_list_of_pushed([])
+                button_autopilot.set_list_of_released([])
         if len(button_autopilot.get_list())==0:       
             button_autopilot.add_new_date_now()
             button_autopilot.set_state_of_pushed_button(True)
