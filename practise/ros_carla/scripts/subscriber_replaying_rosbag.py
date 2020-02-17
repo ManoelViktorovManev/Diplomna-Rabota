@@ -2,6 +2,8 @@
 import carla
 import read_data
 import rospy
+import rosbag
+import sys
 from msg_folder.msg import MyRosMsg
 
 client = carla.Client('localhost', 2000)
@@ -15,18 +17,38 @@ button_autopilot=read_data.Pushing_Buton([])
 control_car=carla.VehicleControl()
 vehicle_type_set=False
 
+
+rosbag_file=sys.argv[1]
+# print (rosbag_file)
+bag=rosbag.Bag(rosbag_file)
+text=''
+for msg in bag.read_messages():
+    text=str(msg)
+    break
+text=text[text.find("name"):]
+name=text[text.find('"')+1:text.find('",')]
+
+car=blueprint_library.find(name)
+transform = carla.Transform(carla.Location(x=30, y=0, z=3), carla.Rotation(yaw=180))
+vehicle=world.spawn_actor(car,transform)
+control_car.brake=1.0
+vehicle.apply_control(control_car)
+
 def callback(data):
     global autopilot
     global button_autopilot
     global vehicle
-    global vehicle_type_set
-    if vehicle_type_set is False:
-        vehicle_type_set = True
-        car=blueprint_library.find(data.vehicle_name)
-        transform = carla.Transform(carla.Location(x=30, y=0, z=3), carla.Rotation(yaw=180))
-        vehicle=world.spawn_actor(car,transform)
-        control_car.brake=1.0
-        vehicle.apply_control(control_car)
+    # global vehicle_type_set
+    # if vehicle_type_set is False:
+    #     vehicle_type_set = True
+    #     # path = os.path.join(os.path.expanduser('~'), 'catkin_ws','src','ros_carla','scripts', 'vehicle_type.txt')
+    #     # f=open(path,'w')
+    #     car=blueprint_library.find(f.)
+    #     car=blueprint_library.find(data.vehicle_name)
+    #     transform = carla.Transform(carla.Location(x=30, y=0, z=3), carla.Rotation(yaw=180))
+    #     vehicle=world.spawn_actor(car,transform)
+    #     control_car.brake=1.0
+    #     vehicle.apply_control(control_car)
 
 
     if data.is_exit==True:
