@@ -63,7 +63,8 @@ pub_id_car=rospy.Publisher('/vehicle_id',Int16,queue_size=1)
 
 checking_for_actors(world)
 controler=checking_joystick()
-spawning_actors.main()
+
+# spawning_actors.main()
 
 list_of_actors=spawning_actors.listofActors()
 
@@ -105,5 +106,6 @@ while True:
     if controler.get_button(0)==True:
         rViz_camera.destroy()
         user_camera.destroy()
+        vehicle.destroy()
         break
     pygame.display.flip()
