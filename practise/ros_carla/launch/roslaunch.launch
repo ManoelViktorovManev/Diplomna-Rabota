@@ -1,0 +1,7 @@
+<launch>
+  <arg name="node_start_delay" default="2.0" />  
+	
+  <node pkg="ros_carla" name="carla_main_file" type="carla_work.py"/>
+  <node pkg="ros_carla" name="sub" type="read_data.py" />
+  <node pkg="ros_carla" name="pub" type="ros_controll.py"  launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' "/>
+</launch>
