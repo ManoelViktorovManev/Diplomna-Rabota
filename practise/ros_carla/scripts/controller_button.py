@@ -3,16 +3,23 @@ import time
 class Button:
     # Constructor   
     def __init__(self):
-        self.date_of_pushed=self.date_of_released=[]
+        self.date_of_pushed=[]
+        self.date_of_released=[]
         self.is_the_button_pressed=False
 
     # Set the state of the button.
     def set_state_of_button(self,bool_set):
         self.is_the_button_pressed=bool_set
     
+    def reset_pushed_data(self,list):
+        self.data_of_pushed=list
+    
+    def reset_released_data(self,list):
+        self.date_of_released=list
     # This function is used for reseting the time.
     def set_date_of_pushed_and_released(self,list):
-        self.date_of_pushed=self.date_of_released=list
+        self.date_of_pushed=list
+        # self.date_of_released=list
     
     # Function that returns that the button is pressed.
     def get_state_of_button(self):
@@ -37,5 +44,3 @@ class Button:
         self.date_of_released.append(time.strftime("%H"))
         self.date_of_released.append(time.strftime("%M"))
         self.date_of_released.append(time.strftime("%S"))
-
-# pak ne raboti towa....
