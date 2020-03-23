@@ -5,3 +5,4 @@ bool is_reverse
 bool is_autopilot
 bool is_exit
 uint16 vehicle_id
+string vehicle_name
