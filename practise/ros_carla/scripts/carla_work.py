@@ -8,9 +8,11 @@ import time
 import spawning_actors
 import displaying_users_camera
 import publishing_image
+import lidar
 
-from sensor_msgs.msg import Image,CameraInfo
+from sensor_msgs.msg import Image,CameraInfo,PointCloud2
 from std_msgs.msg import Int16
+
 
 # Function that checks if there are actors in simulation when the script is started and afterwards destroying them. 
 # This fundction is used when there is a program crash.  
@@ -52,19 +54,26 @@ def checking_joystick(controller=None):
 
 
 client=carla.Client('localhost',2000)
-client.set_timeout(1.0)
+client.set_timeout(3.0)
+# client.reload_world()
 world=client.get_world()
 
+debug=world.debug
+
 rospy.init_node('ros_subscriber',anonymous=True)
-pub_image=rospy.Publisher('/camera/rgb/image',Image,queue_size=10)
-pub_camera=rospy.Publisher('/camera/rgb/camera_info',CameraInfo,queue_size=10)
+# pub_image=rospy.Publisher('/camera/rgb/image',Image,queue_size=10)
+# pub_camera=rospy.Publisher('/camera/rgb/camera_info',CameraInfo,queue_size=10)
 pub_id_car=rospy.Publisher('/vehicle_id',Int16,queue_size=1)
+# pub_pointcloud2=rospy.Publisher('/lidar/ray_cast',PointCloud2,queue_size=10)
 
 
 checking_for_actors(world)
 controler=checking_joystick()
 
+# spawning_actors.main() - spawns other vehicles
 # spawning_actors.main()
+
+
 
 list_of_actors=spawning_actors.listofActors()
 
@@ -72,7 +81,8 @@ blueprint_library = world.get_blueprint_library()
 
 # car=spawning_actors.chose_element_from_list(blueprint_library.filter("vehicle*"))
 car=blueprint_library.find("vehicle.mercedes-benz.coupe")
-transform = carla.Transform(carla.Location(x=30, y=0, z=3), carla.Rotation(yaw=180))
+transform = carla.Transform(carla.Location(x=30, y=0, z=0.5), carla.Rotation(yaw=180))
+
 vehicle = world.spawn_actor(car, transform)
 
 # setting spawned car not to move
@@ -83,29 +93,43 @@ vehicle.apply_control(control_car)
 # cam=spawning_actors.chose_element_from_list(blueprint_library.filter("sensor.camera*"))
 camera_for_user=blueprint_library.find("sensor.camera.rgb")
 camera_visualization=blueprint_library.find("sensor.camera.rgb")
+camera_visualization_segemntic=blueprint_library.find("sensor.camera.depth")
+lidar_visualization=blueprint_library.find("sensor.lidar.ray_cast")
 
 transform_cam=carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))
 user_camera=world.spawn_actor(camera_for_user,transform_cam,attach_to=vehicle)
 
 transform_cam=carla.Transform(carla.Location(x=3, z=1), carla.Rotation(pitch=-15))
-rViz_camera=world.spawn_actor(camera_visualization,transform_cam,attach_to=vehicle)
+rViz_camera=world.spawn_actor(camera_visualization_segemntic,transform_cam,attach_to=vehicle)
+
+# 5,5
+transform_cam=carla.Transform(carla.Location(x=0, y=0, z=2.5), carla.Rotation(yaw=180))
+rViz_lidar=world.spawn_actor(lidar_visualization,transform_cam,attach_to=vehicle)
+
 
 type_of_camera=getting_camera_sensor(rViz_camera)
 
 display=displaying_users_camera.make_display()
 
-rViz_camera.listen(lambda image: publishing_image.publishing(pub_image,pub_camera,image,type_of_camera))
 user_camera.listen(lambda image: displaying_users_camera.parse(display,image,0))
+# rViz_camera.listen(lambda image: publishing_image.publishing(pub_image,pub_camera,image,type_of_camera))
+
+# rViz_lidar.listen(lambda image: lidar.publishing(image,pub_pointcloud2))
 
 list_of_actors.append(vehicle)
+
 list_of_actors.append(user_camera)
-list_of_actors.append(rViz_camera)
+# list_of_actors.append(rViz_camera)
+# list_of_actors.append(rViz_lidar)
+# clock = pygame.time.Clock()
 while True:
     pub_id_car.publish(vehicle.id)
     pygame.event.get()
     if controler.get_button(0)==True:
-        rViz_camera.destroy()
-        user_camera.destroy()
-        vehicle.destroy()
+        for i in list_of_actors:
+            i.destroy()
         break
+    
     pygame.display.flip()
+    
+  
